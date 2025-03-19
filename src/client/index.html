@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tesla Escape - Multiplayer 3D Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background-color: #222;
+        }
+        #game-container {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+        }
+        #menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2rem;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            display: none;
+            z-index: 100;
+        }
+        #menu.active {
+            display: block;
+        }
+        #connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            border-radius: 5px;
+            z-index: 1000;
+            transition: background-color 0.3s;
+        }
+        #connection-status.connected {
+            background: rgba(0, 255, 0, 0.8);
+        }
+        #connection-status.connecting {
+            background: rgba(255, 165, 0, 0.8);
+        }
+        button {
+            padding: 1rem 2rem;
+            margin: 0.5rem;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+        }
+        #hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-size: 1.2rem;
+            text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .stat-group {
+            margin-bottom: 10px;
+        }
+        .ability-counter {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        .ability-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 50%;
+        }
+        .shield-icon {
+            background: #64B5F6;
+        }
+        .invisibility-icon {
+            background: #81C784;
+        }
+        .flame-icon {
+            background: #FF7043;
+        }
+        #survival-timer {
+            color: #4FC3F7;
+        }
+        #kills-counter {
+            color: #FF5252;
+        }
+        .error-message {
+            color: #ff6b6b;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        .cooldown-bar {
+            width: 100px;
+            height: 5px;
+            background: #333;
+            margin-left: 10px;
+            border-radius: 2px;
+        }
+        .cooldown-progress {
+            width: 100%;
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+        .active-ability {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        #controls-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        #controls-info h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        
+        #controls-info ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        /* Add styles for server connection form */
+        #server-form {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        #server-form input {
+            padding: 8px;
+            width: 70%;
+            margin-right: 5px;
+            border-radius: 4px;
+            border: none;
+        }
+
+        #server-form button {
+            padding: 8px 12px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #server-form button:hover {
+            background: #45a049;
+        }
+
+        /* Add title for online multiplayer */
+        .section-title {
+            margin-top: 15px;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+
+        /* Style for the host info section */
+        #host-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="connection-status">Not connected to server. Please wait...</div>
+    <div id="menu" class="active">
+        <h1>Tesla Escape</h1>
+        
+        <div id="server-form">
+            <div class="section-title">Connect to Online Server</div>
+            <input type="text" id="server-address" placeholder="Enter server address (e.g., example.com:3000)" />
+            <button id="connect-btn">Connect</button>
+        </div>
+        
+        <div id="host-info">
+            <div class="section-title">How to Host a Server</div>
+            <p>To host a server and play with friends:</p>
+            <ol style="text-align: left; padding-left: 20px;">
+                <li>Set up port forwarding on port 3000 in your router settings</li>
+                <li>Share your public IP address with friends</li>
+                <li>They can connect using your-ip:3000</li>
+            </ol>
+        </div>
+        
+        <p>Choose your role:</p>
+        <button id="tesla-btn" disabled>Play as Tesla</button>
+        <button id="hunter-btn" disabled>Play as Hunter</button>
+        <p id="menu-message">Connecting to server...</p>
+    </div>
+    <div id="controls-info">
+        <h3>Controls</h3>
+        <ul>
+            <li>Move: W, A, S, D</li>
+            <li>Boost: Shift</li>
+            <li>Special 1: Right-click (was I)</li>
+            <li>Special 2: Space (was J)</li>
+            <li>Look Around: Hold Left-click</li>
+        </ul>
+    </div>
+    <div id="hud">
+        <div class="bar-container">
+            <div id="health-bar"></div>
+        </div>
+        <div id="health-text">100</div>
+        
+        <div class="ability-container">
+            <div class="ability-text">
+                <span id="boost-charges">Boost: 3</span>
+            </div>
+            <div class="cooldown-bar">
+                <div id="boost-cooldown" class="cooldown-progress"></div>
+            </div>
+        </div>
+
+        <!-- Tesla-specific HUD -->
+        <div id="tesla-hud">
+            <div id="survival-time">Survival: 0:00</div>
+            
+            <div class="bar-container">
+                <div id="shield-bar"></div>
+            </div>
+            
+            <div class="ability-container">
+                <div class="ability-text">
+                    <span id="shield-charges">Shield: 3</span>
+                </div>
+                <div class="cooldown-bar">
+                    <div id="shield-cooldown" class="cooldown-progress"></div>
+                </div>
+            </div>
+            
+            <div class="ability-container">
+                <div class="ability-text">
+                    <span id="invisibility-charges">Invisibility: 3</span>
+                </div>
+                <div class="cooldown-bar">
+                    <div id="invisibility-cooldown" class="cooldown-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hunter-specific HUD -->
+        <div id="hunter-hud">
+            <div id="kills-counter">Kills: 0</div>
+            
+            <div class="ability-container">
+                <div class="ability-text">
+                    <span>Shoot (I)</span>
+                </div>
+                <div class="cooldown-bar">
+                    <div id="shoot-cooldown" class="cooldown-progress"></div>
+                </div>
+            </div>
+            
+            <div class="ability-container">
+                <div class="ability-text">
+                    <span>Flame (J)</span>
+                </div>
+                <div class="cooldown-bar">
+                    <div id="flame-cooldown" class="cooldown-progress"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-group">
+            <div id="players">Players: 1</div>
+        </div>
+    </div>
+    <script type="module" src="./main.ts"></script>
+</body>
+</html> 
