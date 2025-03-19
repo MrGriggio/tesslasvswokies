@@ -1,3 +1,6 @@
+// Import crypto polyfill first, before any other imports
+import '../polyfills/crypto.js';
+
 import { io, Socket } from 'socket.io-client';
 import { Game } from './game/Game';
 import { PlayerType } from '../shared/types';

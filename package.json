@@ -24,6 +24,7 @@
     "@types/node": "^20.10.5",
     "@types/three": "^0.160.0",
     "concurrently": "^8.2.2",
+    "crypto-browserify": "^3.12.1",
     "nodemon": "^3.0.2",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",

@@ -1,0 +1,13 @@
+// src/polyfills/crypto.js
+import crypto from 'crypto';
+
+if (typeof global.crypto !== 'object') {
+  global.crypto = crypto;
+}
+
+if (typeof global.crypto.getRandomValues !== 'function') {
+  global.crypto.getRandomValues = function getRandomValues(array) {
+    return crypto.webcrypto.getRandomValues(array);
+  };
+}
+

@@ -5,12 +5,19 @@ export default defineConfig({
   root: 'src/client',
   publicDir: '../../public',
   build: {
+    target: 'es2018',
     outDir: '../../dist/client',
     emptyOutDir: true
   },
+  define: {
+    // This adds a global crypto polyfill for builds on older Node versions
+    global: 'globalThis',
+  },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
+      '@': path.resolve(__dirname, './src'),
+      // Handle crypto for older Node versions
+      crypto: 'crypto-browserify',
     }
   },
   server: {
