@@ -443,7 +443,8 @@ export class Game {
                 shoot: false, 
                 shield: false,
                 mouseX: 0,
-                mouseY: 0
+                mouseY: 0,
+                lookAround: false
             };
             
             this.player.update(0, emptyInputState);
