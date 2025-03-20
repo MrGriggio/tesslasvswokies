@@ -22,9 +22,11 @@ export class Game {
     private isHunter: boolean = false;
     private isLowPerformanceMode: boolean = false;
     private frameCount: number = 0;
+    private playerName: string;
+    private team: 'tesla' | 'wookie';
 
-    constructor(playerType: PlayerType, socket: Socket) {
-        console.log("Game constructor called for", playerType);
+    constructor(socket: Socket, playerName: string, team: 'tesla' | 'wookie') {
+        console.log("Game constructor called for", playerName, team);
         
         try {
             // Initialize Three.js scene
@@ -55,7 +57,9 @@ export class Game {
             this.input = new InputHandler();
             this.lastTime = performance.now();
             this.isRunning = false;
-            this.isHunter = playerType === PlayerType.HUNTER;
+            this.isHunter = team === 'wookie';
+            this.playerName = playerName;
+            this.team = team;
             
             // Show appropriate HUD
             document.getElementById('tesla-hud')!.style.display = this.isHunter ? 'none' : 'block';
@@ -65,11 +69,11 @@ export class Game {
             this.world = new World(this.scene);
             // Create player with isLocalPlayer = true and use socket ID for player name
             this.player = new Player(
-                playerType, 
+                this.team === 'tesla' ? PlayerType.TESLA : PlayerType.HUNTER, 
                 this.scene, 
                 this.camera, 
                 true, // isLocalPlayer
-                this.socket.id ? `You (${playerType})` : `Player (${playerType})`
+                this.playerName
             );
             this.gameState = {
                 players: new Map(),
@@ -103,7 +107,7 @@ export class Game {
             this.world.init();
             
             console.log("Initializing player with safe spawn location");
-            this.initPlayer(this.player.getType() === 'hunter' ? PlayerType.HUNTER : PlayerType.TESLA);
+            this.initPlayer(this.player.getType() === 'wookie' ? PlayerType.HUNTER : PlayerType.TESLA);
             
             // Set up scene lighting
             console.log("Setting up lighting");

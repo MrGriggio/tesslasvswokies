@@ -157,31 +157,22 @@ try {
     updateConnectionStatus('Failed to initialize game. Please refresh the page.');
 }
 
-function startGame(playerType: PlayerType) {
+function startGame(playerName: string, team: 'tesla' | 'wookie') {
     try {
-        console.log('Starting game as', playerType);
+        console.log('Starting game as', playerName, 'with team', team);
         
         // Hide menu
         const menu = document.getElementById('menu');
         if (menu) menu.classList.remove('active');
 
         // Create and initialize game
-        game = new Game(playerType, socket);
+        game = new Game(socket, playerName, team);
         
-        // Join game first
-        socket.emit('join', playerType, (response: { success: boolean, error?: string }) => {
-            if (response.success) {
-                console.log('Successfully joined game');
-                game?.init(); // Initialize the game after successful join
-            } else {
-                console.error('Failed to join game:', response.error);
-                updateConnectionStatus(`Failed to join game: ${response.error}`);
-                
-                // Show menu again if join failed
-                if (menu) menu.classList.add('active');
-                game = null;
-            }
-        });
+        // Hide login overlay
+        const loginOverlay = document.getElementById('login-overlay');
+        if (loginOverlay) {
+            loginOverlay.style.display = 'none';
+        }
         
     } catch (error) {
         console.error('Error starting game:', error);
@@ -210,4 +201,32 @@ document.addEventListener('visibilitychange', () => {
             game.resume();
         }
     }
+});
+
+// Handle login and team selection
+document.addEventListener('DOMContentLoaded', () => {
+    const playerNameInput = document.getElementById('player-name') as HTMLInputElement;
+    const teslaButton = document.getElementById('tesla-button');
+    const wookieButton = document.getElementById('wookie-button');
+    const errorMessage = document.getElementById('error-message');
+
+    function handleTeamSelection(team: 'tesla' | 'wookie') {
+        const playerName = playerNameInput.value.trim();
+        if (!playerName) {
+            if (errorMessage) {
+                errorMessage.style.display = 'block';
+            }
+            return;
+        }
+        startGame(playerName, team);
+    }
+
+    teslaButton?.addEventListener('click', () => handleTeamSelection('tesla'));
+    wookieButton?.addEventListener('click', () => handleTeamSelection('wookie'));
+
+    playerNameInput?.addEventListener('input', () => {
+        if (errorMessage) {
+            errorMessage.style.display = 'none';
+        }
+    });
 }); 
