@@ -29,12 +29,24 @@ app.get('*', (req, res) => {
 });
 
 // Store connected players
+interface Position {
+    x: number;
+    y: number;
+    z: number;
+}
+
+interface Rotation {
+    x: number;
+    y: number;
+    z: number;
+}
+
 interface Player {
     name: string;
     team: 'tesla' | 'wookie';
     socket: any;
-    position?: { x: number; y: number; z: number };
-    rotation?: { x: number; y: number; z: number };
+    position: Position;
+    rotation: Rotation;
 }
 
 const players = new Map<string, Player>();
@@ -89,7 +101,7 @@ io.on('connection', (socket) => {
     });
 
     // Handle player movement
-    socket.on('playerMove', (data: { position: any, rotation: any }) => {
+    socket.on('playerMove', (data: { position: Position, rotation: Rotation }) => {
         try {
             const player = players.get(socket.id);
             if (player) {
