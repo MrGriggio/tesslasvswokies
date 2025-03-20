@@ -1,8 +1,8 @@
 module.exports = {
   apps: [{
     name: 'tesla-escape',
-    script: 'src/server/index.ts',
-    interpreter: './node_modules/.bin/ts-node',
+    script: './dist/server/index.js',
+    interpreter: '/root/.nvm/versions/node/v22.14.0/bin/node',
     instances: 1,
     autorestart: true,
     watch: false,
